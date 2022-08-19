@@ -1,0 +1,11 @@
+{
+    "basic_q_table_config": {
+        "e": 0.1,
+        "lr": 0.03
+    },
+
+    "basic_q_net_config": {
+        "e": 0.1,
+        "lr": 0.8
+    }
+}
