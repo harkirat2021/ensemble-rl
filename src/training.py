@@ -126,6 +126,7 @@ def trained_q_net(game, Qnet, e, lr, y, num_episodes):
                 # Reduce chance of random action as we train the model.
                 e = 1. / ((i / 50) + 10)
                 break
+            
         rList.append(rAll)
         jList.append(j)
 

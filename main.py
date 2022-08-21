@@ -29,6 +29,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Init Game
 env = gym.make(ENV_NAME, is_slippery=False)
+#env = Game(living_penalty=-0.04, render=False)
+
 env.reset()
 
 print("Training model...")

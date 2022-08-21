@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 
 def save_logs(losses, rewards, experiment_name="", save_plots=False):
+    """ Plot training rewards and losses"""
     plt.plot(rewards)
     plt.title("Rewards")
     plt.xlabel("Iterations")

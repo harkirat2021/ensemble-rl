@@ -4,6 +4,7 @@ import tty
 import termios
 import numpy as np
 import matplotlib.pyplot as plt
+from collections import namedtuple
 
 import torch
 import torch.nn as nn
@@ -11,6 +12,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 class GetKey:
+    """ Get keyboard input """
     def __call__(self):
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
@@ -22,6 +24,7 @@ class GetKey:
         return ch
 
 def get_manual_arrow_key():
+    """ Get arrow key inputs """
     inkey = GetKey()
     while(1):
         k = inkey()
@@ -82,13 +85,18 @@ BOLD = "\033[;1m"
 REVERSE = "\033[;7m"
 
 class Game():
+    """ Custom game class - Essentially same as frozen lake """
     def __init__(self, living_penalty=0, map_size='8x8', render=True):
         map_layout = np.asarray(MAPS[map_size], dtype='c')
         self.max_row, self.max_col = map_layout.shape
 
         self.state_space = self.max_row * self.max_col
+        self.observation_space = namedtuple('ObservationSpace', 'n')
+        self.observation_space.n = self.state_space
+
         self.actions = ('left', 'down', 'right', 'up')
-        self.action_space = 4
+        self.action_space = namedtuple('ObservationSpace', 'n')
+        self.action_space.n = 4
 
         map_layout = map_layout.tolist()
         self.map_layout = [[c.decode('utf-8') for c in line] for line in map_layout]
@@ -102,14 +110,14 @@ class Game():
             self.rendering()
 
     def reset(self):
-        '''This method resets the game.'''
+        ''' This method resets the game. '''
         self.x_pos, self.y_pos = 0, 0
         self.lastaction = None
         self.game_over = False
         return self.get_state()
 
     def get_reward(self):
-        '''Returns the reward of the current player position and sets the game_over boolean.'''
+        ''' Returns the reward of the current player position and sets the game_over boolean. '''
         label = self.map_layout[self.x_pos][self.y_pos]
         if label in 'FS':
             return self.living_penalty
@@ -126,14 +134,14 @@ class Game():
             return 1
 
     def get_state(self):
-        '''Returns the current state of the player'''
+        ''' Returns the current state of the player '''
         return (self.x_pos * 8) + self.y_pos
     
     def set_state(self, state_val):
         self.x_pos = state_val // 8
         self.y_pos = state_val % 8
 
-    def perform_action(self, action):
+    def step(self, action):
         '''
         Performs the given action in the environment. 
         
@@ -155,10 +163,10 @@ class Game():
         if self.render:
             self.rendering()
 
-        return self.get_reward(), self.get_state(), self.game_over
+        return self.get_state(), self.get_reward(), self.game_over, {} # Info, not added yet
 
     def rendering(self):
-        '''This method renders the game in the console. For each step the console will be cleared and then reprinted'''
+        ''' This method renders the game in the console. For each step the console will be cleared and then reprinted '''
         os.system('cls||clear')
         if self.lastaction is not None:
             sys.stdout.write(BLUE)
@@ -183,6 +191,7 @@ actions = ('left', 'down', 'right', 'up')
 
 
 def print_policy(agent, game):
+    """ Print agent policy """
     policy = [agent(s).argmax(1)[0].detach().item() for s in range(state_space)]
     policy = np.asarray([actions[action] for action in policy])
     policy = policy.reshape((game.max_row, game.max_col))
