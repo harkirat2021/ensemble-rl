@@ -16,7 +16,7 @@ from src.utils import *
 from src.ensemble import *
 
 MODEL_TYPE = "ensemble"
-# FrozenLake-v1
+# FrozenLake-v1, Taxi-v3
 ENV_NAME = "Taxi-v3"
 
 # Load configs
@@ -30,8 +30,8 @@ with open("configs/train_configs.json", "rb") as f:
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Init Game
-env = gym.make(ENV_NAME)
-#env = Game(living_penalty=-0.04, render=False)
+#env = gym.make(ENV_NAME)
+env = Game(living_penalty=-0.04, map_size="simple", render=False)
 
 env.reset()
 
