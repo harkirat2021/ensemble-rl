@@ -53,6 +53,11 @@ class QNetwork(nn.Module):
     def forward(self, x):
         """ Model inference  """
         x = self.one_hot_encoding(x)
+
+        # Move to device if needed
+        if next(self.parameters()).is_cuda:
+            x = x.cuda()
+            
         out1 = torch.sigmoid(self.l1(x))
         return self.l2(out1) 
 

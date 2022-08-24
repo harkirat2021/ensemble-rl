@@ -30,8 +30,8 @@ with open("configs/train_configs.json", "rb") as f:
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Init Game
-#env = gym.make(ENV_NAME)
-env = Game(living_penalty=-0.04, map_size="simple", render=False)
+env = gym.make(ENV_NAME)
+#env = Game(living_penalty=-0.04, map_size="simple", render=False)
 
 env.reset()
 
@@ -67,8 +67,6 @@ if MODEL_TYPE == "ensemble":
     print("runngn ensml")
 
     # Train Ensemble
-    game = Game(living_penalty=-0.04, render=False)
-
     a1 = Agent(agent_type="table", state_space=64, action_space=4)
     a1.agent = Q_dummy_a
 
@@ -80,7 +78,7 @@ if MODEL_TYPE == "ensemble":
     )
 
     agent, losses, rewards = trained_q_net(
-        game, agent, e=0.1, lr=0.05, y=0.999, num_episodes=20, training_ensemble=True
+        env, agent, e=0.1, lr=0.05, y=0.999, num_episodes=20, training_ensemble=True
     )
 
 end = time.time()

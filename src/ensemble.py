@@ -44,12 +44,12 @@ class EnsembleQNetwork(nn.Module):
         actions_probs = actions_qs / np.sum(actions_qs)
 
         if np.sum(actions_qs) == 0:
-            actions_probs = np.ones(action_space) / 4
+            actions_probs = np.ones(self.action_space.n) / 4
 
         # Set probabilities for new state
-        state_prob = np.zeros(self.state_space)
+        state_prob = np.zeros(game.observation_space.n)
 
-        for i in range(len(game.actions)):
+        for i in range(game.action_space.n):
             # Create copy of game state - TODO - need to set same params
             game = Game(living_penalty=-0.04, render=False)
             game = set_game_state(game, state)
