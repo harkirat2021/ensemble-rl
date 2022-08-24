@@ -56,7 +56,7 @@ def get_trained_q_table(game, e, lr, y, num_episodes):
     
     return Q, jList, rList
 
-def trained_q_net(game, Qnet, e, lr, y, num_episodes):
+def trained_q_net(game, Qnet, e, lr, y, num_episodes, training_ensemble=False):
     """ Train deep Q learning model """
 
     # Define State and Action Space
@@ -86,7 +86,10 @@ def trained_q_net(game, Qnet, e, lr, y, num_episodes):
             with torch.no_grad():
                 # Do a feedforward pass for the current state s to get predicted Q-values
                 # for all actions (=> agent(s)) and use the max as action a: max_a Q(s, a)
-                a = Qnet(s).max(1)[1].view(1, 1)  # max(1)[1] returns index of highest value
+                if training_ensemble:
+                    a = Qnet(s, game).max(1)[1].view(1, 1)  # max(1)[1] returns index of highest value
+                else:
+                    a = Qnet(s).max(1)[1].view(1, 1)
 
             # e greedy exploration
             if np.random.rand(1) < e:
@@ -98,8 +101,12 @@ def trained_q_net(game, Qnet, e, lr, y, num_episodes):
             s1, r, game_over, info = game.step(a.item())
 
             # Calculate Q and target Q
-            q = Qnet(s).max(1)[0].view(1, 1)
-            q1 = Qnet(s1).max(1)[0].view(1, 1)
+            if training_ensemble:
+                q = Qnet(s, game).max(1)[0].view(1, 1)
+                q1 = Qnet(s1, game).max(1)[0].view(1, 1)
+            else:
+                q = Qnet(s).max(1)[0].view(1, 1)
+                q1 = Qnet(s1).max(1)[0].view(1, 1)
 
             with torch.no_grad():
                 # Set target Q-value for action to: r + y max_a’ Q(s’, a’)
@@ -126,7 +133,7 @@ def trained_q_net(game, Qnet, e, lr, y, num_episodes):
                 # Reduce chance of random action as we train the model.
                 e = 1. / ((i / 50) + 10)
                 break
-            
+
         rList.append(rAll)
         jList.append(j)
 

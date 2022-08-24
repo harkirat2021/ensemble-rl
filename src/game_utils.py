@@ -11,6 +11,19 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+def set_game_state(env, state):
+    """ Set the state of the environment """
+    if type(env) == Game:
+        env.set_state(state)
+        return env
+    elif type(env) == gym.Env:
+        env.state = env.unwrapped.state = state
+        env.steps_beyond_done = None
+        return env
+    else:
+        print("Environment not recognizable")
+        return
+
 class GetKey:
     """ Get keyboard input """
     def __call__(self):
@@ -38,8 +51,6 @@ def get_manual_arrow_key():
         return 'right'
     elif k == '\x1b[D':
         return 'left'
-
-
 
 # define the map
 MAPS = {
@@ -95,7 +106,7 @@ class Game():
         self.observation_space.n = self.state_space
 
         self.actions = ('left', 'down', 'right', 'up')
-        self.action_space = namedtuple('ObservationSpace', 'n')
+        self.action_space = namedtuple('ActionSpace', 'n')
         self.action_space.n = 4
 
         map_layout = map_layout.tolist()
