@@ -47,32 +47,29 @@ if MODEL_TYPE == "q_net":
         env, Q, **agent_config["basic_q_net_config"], **train_config["basic_train_config"]
     )
 
-if MODEL_TYPE == "q_table":
+    # Create agent from trained model
+    agent = Agent(agent_type="network", state_space=env.observation_space.n, action_space=env.action_space.n)
+    agent.agent = Q
+
+elif MODEL_TYPE == "q_table":
     # Train Q Table
     Q, losses, rewards = get_trained_q_table(
         env, **agent_config["basic_q_table_config"], **train_config["basic_train_config"]
     )
 
-if MODEL_TYPE == "ensemble":
-    print("defining")
+    # Create agent from trained model
+    agent = Agent(agent_type="table", state_space=env.observation_space.n, action_space=env.action_space.n)
+    agent.agent = Q
+
+elif MODEL_TYPE == "ensemble":
     # Define dummy agents, both of which are good on two different parts of the game
-    Q_dummy_a = np.zeros((64, 4))
-    Q_dummy_a[:8, 2] = 1
-    Q_dummy_a[[15, 23, 31, 39, 47, 55, 63], 1] = 1
-    Q_dummy_a[16:23, 2] = 1
-
-    Q_dummy_b = np.zeros((64, 4))
-    Q_dummy_b[[0, 8, 16, 24, 32, 48, 56], 1] = 1
-
-    print("runngn ensml")
-
-    # Train Ensemble
     a1 = Agent(agent_type="table", state_space=64, action_space=4)
-    a1.agent = Q_dummy_a
+    a1.load("experiments/dummy_agent_1", 0)
 
     a2 = Agent(agent_type="table", state_space=64, action_space=4)
-    a2.agent = Q_dummy_b
-
+    a2.load("experiments/dummy_agent_1", 0)
+    
+    # Train Ensemble
     agent = EnsembleQNetwork(
         [a1, a2], state_space=64, action_space=4, trajectory_depth=1, weighted_actions=True
     )
@@ -88,4 +85,4 @@ print("Done in {:.2f} seconds".format(end - start))
 print("Average Score:", str(sum(rewards) / train_config["basic_train_config"]["num_episodes"]))
 
 # Log run metrics
-save_logs(losses, rewards, experiment_name="", save_plots=False)
+save_logs(agent, losses, rewards, experiment_name="dummy_agent_2", save_plots=True)

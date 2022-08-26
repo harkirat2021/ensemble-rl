@@ -2,6 +2,7 @@ import sys
 import os
 import tty
 import termios
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -37,6 +38,26 @@ class Agent():
             return np.argmax(self.agent[state, :] + np.random.randn(1, self.action_space) * explore_prob)
         elif self.agent_type == "network":
             return self.agent(state).max(1)[0].view(1, 1)
+    
+    def save(self, path):
+        with open(os.path.join(path, "config.json"), "w") as f:
+            json.dump({"type": self.agent_type}, f)
+
+        if self.agent_type == "table":
+            self.agent.tofile(os.path.join(path, "model.dat"))
+        elif self.agent_type == "network":
+            torch.save(self.agent.state_dict(), "model.bin")
+    
+    def load(self, path, experiment_num):
+        with open(os.path.join(path, "experiment_{}".format(experiment_num), "config.json"), 'r') as f:
+            config = json.load(f)
+        
+        if config["type"] == "table":
+            self.agent_type = "table"
+            self.agent = np.fromfile(os.path.join(path, "experiment_{}".format(experiment_num), "model.dat"), dtype=np.float32)
+        elif config["type"] == "network":
+            self.agent_type = "network"
+            self.agent.load_state_dict(torch.load(os.path.join(path, "experiment_{}".format(experiment_num), "model.bin")))
 
 # define Q-Network
 class QNetwork(nn.Module):
@@ -57,7 +78,7 @@ class QNetwork(nn.Module):
         # Move to device if needed
         if next(self.parameters()).is_cuda:
             x = x.cuda()
-            
+
         out1 = torch.sigmoid(self.l1(x))
         return self.l2(out1) 
 
