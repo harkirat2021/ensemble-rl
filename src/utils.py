@@ -10,7 +10,8 @@ def save_logs(agent, losses, rewards, experiment_name="", experiment_number=0, s
             os.mkdir("experiments/{}/experiment_{}".format(experiment_name, experiment_number))
     
     # Save agent
-    agent.save("experiments/{}/experiment_{}".format(experiment_name, experiment_number))
+    if save_plots:
+        agent.save("experiments/{}/experiment_{}".format(experiment_name, experiment_number))
 
     # Save plot
     plt.plot(rewards)
