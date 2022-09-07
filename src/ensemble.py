@@ -38,36 +38,8 @@ class EnsembleQNetwork(nn.Module):
         )
 
     """ Generate agent plans """
-    def old_get_agent_trajectory(self, agent, game, state, n, max_steps):
-        # Get Q values for action and convert to softmax - TODO need agent class to make this easy
-        actions_qs = agent.get_q_values(state)
-        actions_probs = actions_qs / np.sum(actions_qs)
-
-        if np.sum(actions_qs) == 0:
-            actions_probs = np.ones(game.action_space.n) / 4
-
-        # Set probabilities for new state
-        state_prob = np.zeros(game.observation_space.n)
-
-        for i in range(game.action_space.n):
-            # Create copy of game state - TODO - need to set same params
-            game = Game(living_penalty=-0.04, render=False)
-            game = set_game_state(game, state)
-
-            # Apply action
-            new_state, reward, game_over, info = game.step(i)
-
-            # Update state values
-            state_prob[new_state] += actions_probs[i]
-
-        # For each non-zero landing spot, recurse - TODO
-        # ...
-
-        return np.stack([state_prob])
-
-    """ Generate agent plans """
     def get_agent_trajectory(self, agent, game, state, n, max_steps):
-        # Get Q values for action and convert to softmax - TODO need agent class to make this easy
+        # Get Q values for action and convert to softmax
         actions_qs = agent.get_q_values(state)
         actions_probs = actions_qs / np.sum(actions_qs)
 
@@ -78,7 +50,7 @@ class EnsembleQNetwork(nn.Module):
         # Set probabilities for new state
         state_prob = np.zeros(game.observation_space.n)
 
-        # Terminate
+        # Terminate if we reached the max depth
         if n == max_steps - 1:
             return np.array([state_prob])
 
@@ -91,13 +63,13 @@ class EnsembleQNetwork(nn.Module):
             # Apply action
             new_state, reward, game_over, info = game.step(i)
 
-            # Get sub trajectories
+            # Get sub trajectories - recurse
             sub_trajectory = self.get_agent_trajectory(agent, game, new_state, n+1, max_steps)
 
             # Add sub trajectory
             sub_trajectories.append(sub_trajectory)
 
-        # Add sub trajectories togethor scaled by action probs
+        # Return added sub trajectories togethor scaled by action probs
         return np.sum([a * t for a, t in zip(actions_probs, np.array(sub_trajectories))], axis=0)
 
     """ Generate multiple agent plans """
@@ -151,7 +123,7 @@ class EnsembleQNetwork(nn.Module):
                 game = Game(living_penalty=-0.04, render=False)
                 game = set_game_state(game, state)
                 action_qs = a.get_q_values(state)
-                
+
                 reward, _, _ = game.perform_action(np.argmax(actions_qs))
                 if max_action_reward < reward:
                     max_reward  = reward
