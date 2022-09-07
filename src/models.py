@@ -55,6 +55,7 @@ class Agent():
         if config["type"] == "table":
             self.agent_type = "table"
             self.agent = np.fromfile(os.path.join(path, "experiment_{}".format(experiment_num), "model.dat"), dtype=np.float32)
+            self.agent = self.agent.reshape((128, 4))
         elif config["type"] == "network":
             self.agent_type = "network"
             self.agent.load_state_dict(torch.load(os.path.join(path, "experiment_{}".format(experiment_num), "model.bin")))
